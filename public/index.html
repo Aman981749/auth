@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Check</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        h3 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h2>Signup</h2>
+            <input id="signup-username" type="text" name="username" placeholder="Username">
+            <input id="signup-password" type="password" name="password" placeholder="Password">
+            <button onclick="signup()">Submit</button>
+        </div>
+        <div>
+            <h2>Signin</h2>
+            <input id="signin-username" type="text" name="username" placeholder="Username">
+            <input id="signin-password" type="password" name="password" placeholder="Password">
+            <button onclick="signin()">Submit</button>
+        </div>
+        <div>
+            <h2>Get Info</h2>
+            <button onclick="getinfo()">Get Info</button>
+            <h3 id="information">Welcome!</h3>
+        </div>
+        <div>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+    <script>
+        async function signup() {
+            try {
+                const usernameField = document.getElementById("signup-username");
+                const passwordField = document.getElementById("signup-password");
+
+                const username = usernameField.value;
+                const password = passwordField.value;
+
+                const response = await axios.post("http://localhost:3000/signup", {
+                    username: username,
+                    password: password
+                });
+
+                console.log(response);
+                alert("Signup successful");
+
+                usernameField.value = "";
+                passwordField.value = "";
+            } catch (error) {
+                if (error.response && error.response.status === 400) {
+                    alert(error.response.data.error);
+                } else {
+                    alert("Something went wrong");
+                }
+            }
+        }
+
+        async function signin() {
+            try {
+                const usernameField = document.getElementById("signin-username");
+                const passwordField = document.getElementById("signin-password");
+
+                const username = usernameField.value;
+                const password = passwordField.value;
+
+                const response = await axios.post("http://localhost:3000/signin", {
+                    username: username,
+                    password: password
+                });
+
+                localStorage.setItem("token", response.data.token);
+
+                alert("Signin successful");
+
+                usernameField.value = "";
+                passwordField.value = "";
+            } catch (error) {
+                if (error.response && error.response.data) {
+                    alert(error.response.data.error);
+                } else {
+                    alert("Something went wrong");
+                }
+            }
+        }
+
+        async function getinfo() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const response = await axios.get("http://localhost:3000/me", {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                    document.getElementById("information").innerHTML =`Welcome ${response.data.username}`;
+                } catch (error) {
+                    if (error.response && error.response.data) {
+                        alert(error.response.data.message || "Unauthorized");
+                    } else {
+                        alert("Something went wrong");
+                    }
+                }
+            } else {
+                alert("No token found. Please login.");
+            }
+        }
+
+        async function logout() {
+            localStorage.removeItem("token");
+            alert("Logged out successfully")
+        }
+    </script>
+</body>
+</html>
